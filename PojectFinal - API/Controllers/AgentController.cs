@@ -65,7 +65,7 @@ namespace PojectFinal___API.Controllers
             agent.x = location.x;
             agent.y = location.y;
 
-            CreateMissions(agent);
+            await CreateMissions(agent);
 
             await _contection.SaveChangesAsync();//שמירה
 
@@ -77,10 +77,10 @@ namespace PojectFinal___API.Controllers
 
         //אחראי להזיז סוכן בהתאם לקריאה מהסימולטור
         [HttpPut("{id}/move")]
-        public async Task<IActionResult> MoveAgent(int id, [FromBody] string move)
+        public async Task<IActionResult> MoveAgent(int id, [FromBody] Diraction dir)
         {
             Agent agent = await _contection.agents.FirstOrDefaultAsync(x => x.Id == id); //שליפה מהמסד נתונים
-
+            var move = dir.diraction;
             if (!Move.Moves.ContainsKey(move)) //שולל מקרה של פקודה לא טובה
             {
                 return BadRequest();
@@ -88,7 +88,7 @@ namespace PojectFinal___API.Controllers
 
             agent = MoveService.MoveAgent(move, agent); //מבצע את התזוזה של הסוכן בהתאם לפקודה
 
-            CreateMissions(agent);
+            await CreateMissions(agent);
 
             await _contection.SaveChangesAsync(); //שמירה
 
@@ -96,6 +96,7 @@ namespace PojectFinal___API.Controllers
             StatusCodes.Status200OK);
         }
 
+        //יוצר משימות
         private async Task CreateMissions(Agent agent)
         {
             var list = await _contection.targets.ToArrayAsync(); //שולף טבלה של מטרות וממיר לרשימה

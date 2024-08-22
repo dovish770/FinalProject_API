@@ -16,13 +16,13 @@ namespace PojectFinal___API.Modles
        
         public string? Status { get; set; }
 
-        [Range(1, 1001)]
-        public int x { get; set; }
+        [Range(0, 1001)]
+        public int x { get; set; } = 0;
 
-        [Range(1, 1001)]
-        public int y { get; set; }
+        [Range(0, 1001)]
+        public int y { get; set; } = 0;
 
-        public string? Image {  get; set; }
+        public string Image {  get; set; }
         
     }
 }

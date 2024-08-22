@@ -41,6 +41,7 @@ namespace PojectFinal___API.Controllers
             target.Status = StatusTarget.statusTarget.Alive.ToString(); //הגדרת סטטוס          
             _contection.targets.Add(target); //הוספה לטבלה
             await _contection.SaveChangesAsync(); //שמירה
+            var target1 = await _contection.targets.FirstOrDefaultAsync(ta => ta.Id == target.Id);
             return StatusCode(
                 StatusCodes.Status201Created,
                 new { success = true, target = target });
@@ -61,7 +62,7 @@ namespace PojectFinal___API.Controllers
             target.x = location.x;
             target.y = location.y;
 
-            CreateMissions(target); //יצירת משימות
+            await CreateMissions(target); //יצירת משימות
 
             await _contection.SaveChangesAsync(); //שמירה
 
@@ -73,7 +74,7 @@ namespace PojectFinal___API.Controllers
 
         //הזז מטרה
         [HttpPut("{id}/move")]
-        public async Task<IActionResult> MoveTarget(int id, [FromBody] string move)
+        public async Task<IActionResult> MoveTarget(int id, [FromBody] Diraction Dir)
         {
             Target target = await _contection.targets.FirstOrDefaultAsync(x => x.Id == id); //שליפת מטרה מטבלת מסד נתונים
 
@@ -81,6 +82,8 @@ namespace PojectFinal___API.Controllers
             {
                 return StatusCode(StatusCodes.Status400BadRequest, new { messege = "cannot move a target that has been eliminated!" });
             }
+
+            var move = Dir.diraction;
 
             if (!Move.Moves.ContainsKey(move)) //בדיקה שהפקודה נכונה
             {
@@ -93,7 +96,7 @@ namespace PojectFinal___API.Controllers
             target.x += commands.x;
             target.y += commands.y;
 
-            CreateMissions(target); //יצירת משימות
+            await CreateMissions(target); //יצירת משימות
 
             await _contection.SaveChangesAsync(); //שמירה
 
@@ -112,11 +115,13 @@ namespace PojectFinal___API.Controllers
                 {
                     if (MissionService.IsMission(agent, target)) //בדיקה אם הקירבה מספיקה כדי ליצור משימה
                     {
-                        Mission mission = MissionService.CreateMission(agent, target); //יצירת מטרה
+                        Mission mission = MissionService.CreateMission(agent, target); //יצירת משימה                       
                         _contection.missions.Add(mission); //הוספה למסד נתונים
+                        _contection.SaveChanges();
                     }
                 }
             }
+            return;
         }
 
 

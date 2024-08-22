@@ -14,12 +14,15 @@ namespace PojectFinal___API.Modles
 
         public string Occupation { get; set; }
 
-        [Range(1, 1001)]
-        public int x { get; set; }
+        [Range(0, 1001)]
+        public int x { get; set; } = new int();
 
-        [Range(1, 1001)]
-        public int y { get; set; }
+        [Range(0, 1001)]
+        public int y { get; set; } = new int();
 
-        public string? Status { get; set; }         
+        public string? Status { get; set; }
+       
     }
+
+
 }
