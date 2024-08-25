@@ -82,11 +82,6 @@ namespace PojectFinal___API.Controllers
 
             return StatusCode(
                 StatusCodes.Status200OK);
-        }
-
-
-
-        
-
+        }    
     }
 }

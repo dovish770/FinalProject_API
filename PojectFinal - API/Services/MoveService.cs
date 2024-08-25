@@ -14,5 +14,23 @@ namespace PojectFinal___API.Services
 
             return agent;
         }
+
+        public static bool IsMoveOutOfRange(int x, int y, string move)
+        {           
+
+            switch (move)
+            {
+                case "n":
+                    return y > 1;
+                case "s":
+                    return y < 1000;
+                case "e":
+                    return x < 1000;
+                case "w":
+                    return x > 1;
+                default:
+                    return false;
+            }        
+        }
     }
 }

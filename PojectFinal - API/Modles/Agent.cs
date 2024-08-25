@@ -12,17 +12,15 @@ namespace PojectFinal___API.Modles
         [Key]
         public int? Id { get; set; }
 
-        public string name { get; set; }
+        public string nickname { get; set; }
        
         public string? Status { get; set; }
-
-        [Range(0, 1001)]
+       
         public int x { get; set; } = 0;
-
-        [Range(0, 1001)]
+       
         public int y { get; set; } = 0;
 
-        public string Image {  get; set; }
+        public string photoUrl {  get; set; }
         
     }
 }

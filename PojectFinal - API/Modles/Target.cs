@@ -9,16 +9,15 @@ namespace PojectFinal___API.Modles
         [Key]
         public int Id { get; set; }
 
+        public string name { get; set; }
 
-        public string Name { get; set; }
+        public string position { get; set; }
 
-        public string Occupation { get; set; }
-
-        [Range(0, 1001)]
         public int x { get; set; } = new int();
-
-        [Range(0, 1001)]
+        
         public int y { get; set; } = new int();
+
+        public string photoUrl { get; set; }
 
         public string? Status { get; set; }
        

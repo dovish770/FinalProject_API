@@ -29,7 +29,7 @@ namespace PojectFinal___API.Services
             return distance < 200 && target.y>0 && target.x >= 0;
         }
 
-        //יוצר פקודה או הוראה לחיסול עבור סוכן במשימה
+        //יוצר פקודה לתנועה עבור סוכן במשימה
         public static string CreateCommeandForAgent(Agent agent, Target target)
         {                        
             //

@@ -10,11 +10,11 @@ namespace PojectFinal___API.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class TargetController : ControllerBase
+    public class TargetsController : ControllerBase
     {
         //חיבור למסד נתונים
         private readonly DbConnection _contection;        
-        public TargetController(DbConnection dbConnection)
+        public TargetsController(DbConnection dbConnection)
         {
             this._contection = dbConnection;
         }
@@ -41,10 +41,10 @@ namespace PojectFinal___API.Controllers
             target.Status = StatusTarget.statusTarget.Alive.ToString(); //הגדרת סטטוס          
             _contection.targets.Add(target); //הוספה לטבלה
             await _contection.SaveChangesAsync(); //שמירה
-            var target1 = await _contection.targets.FirstOrDefaultAsync(ta => ta.Id == target.Id);
+            target = await _contection.targets.FirstOrDefaultAsync(ta => ta.Id == target.Id);
             return StatusCode(
                 StatusCodes.Status201Created,
-                new { success = true, target = target });
+                new { success = true, id = target.Id });
         }
 
         //הגדרת מיקום
@@ -77,19 +77,18 @@ namespace PojectFinal___API.Controllers
         public async Task<IActionResult> MoveTarget(int id, [FromBody] Diraction Dir)
         {
             Target target = await _contection.targets.FirstOrDefaultAsync(x => x.Id == id); //שליפת מטרה מטבלת מסד נתונים
+            var move = Dir.direction;
 
             if (target.Status ==  StatusTarget.statusTarget.Eliminated.ToString())//בדיקה שהסטטוס מתאים
             {
                 return StatusCode(StatusCodes.Status400BadRequest, new { messege = "cannot move a target that has been eliminated!" });
             }
 
-            var move = Dir.diraction;
-
-            if (!Move.Moves.ContainsKey(move)) //בדיקה שהפקודה נכונה
+            if (!MoveService.IsMoveOutOfRange(target.x, target.y, move))//שגיאה אם התזוזה היא מחוץ לגבולות
             {
-                return StatusCode(StatusCodes.Status400BadRequest, new { messege = "cannot move a target that has been eliminated!" });
+                return StatusCode(400, new { messege = "cannot move outside of boarders!" });
             }
-
+                      
             var commands = Move.Moves[move]; //שליפת ממילון של קאודינטות בהתאם לפקודה
 
             //החלה של המיקום במטרה
@@ -131,13 +130,6 @@ namespace PojectFinal___API.Controllers
             await _contection.SaveChangesAsync();
             return;
         }
-
-
-
-
-
-
-
 
     }
 }

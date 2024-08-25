@@ -11,11 +11,11 @@ namespace PojectFinal___API.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AgentController : ControllerBase
+    public class AgentsController : ControllerBase
     {
         //חיבור לDB
         private readonly DbConnection _contection;        
-        public AgentController(DbConnection dbConnection)
+        public AgentsController(DbConnection dbConnection)
         {
             this._contection = dbConnection;
         }
@@ -45,10 +45,10 @@ namespace PojectFinal___API.Controllers
             _contection.agents.Add(agent); //מסויף לDB
 
             await _contection.SaveChangesAsync();
-
+            agent = await _contection.agents.FirstOrDefaultAsync(ag => ag.Id == agent.Id);
             return StatusCode(
                 StatusCodes.Status201Created,
-                new { success = true, agent = agent });
+                new { success = true, id = agent.Id });
         }
 
         //מגדיר מיקום של סוכן חדש
@@ -81,11 +81,19 @@ namespace PojectFinal___API.Controllers
         public async Task<IActionResult> MoveAgent(int id, [FromBody] Diraction dir)
         {
             Agent agent = await _contection.agents.FirstOrDefaultAsync(x => x.Id == id); //שליפה מהמסד נתונים
-            var move = dir.diraction;
-            if (!Move.Moves.ContainsKey(move)) //שולל מקרה של פקודה לא טובה
+
+            var move = dir.direction;
+
+            if (agent.Status ==  StatusAgent.statusAgent.OnAMission.ToString())//בדיקה שהסטטוס מתאים
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status400BadRequest, new { messege = "cannot move an agent on a mission!" });
             }
+           
+            if (!MoveService.IsMoveOutOfRange(agent.x, agent.y, move))//שגיאה אם התזוזה היא מחוץ לגבולות
+            {
+            return StatusCode(400, new {messege = "cannot move outside of boarders!"}); 
+            }
+
 
             agent = MoveService.MoveAgent(move, agent); //מבצע את התזוזה של הסוכן בהתאם לפקודה
 
@@ -125,7 +133,7 @@ namespace PojectFinal___API.Controllers
             await _contection.SaveChangesAsync();
         }
 
-        //בדיקה האם המטרה משויכת למשימה פעילה
+        //בדיקה האם המטרה המוצעת למשימה פעילה
         private async Task<bool> IsNotTargeted(int id)
         {
             Mission mission = await _contection.missions.FirstOrDefaultAsync(x => x.Target.Id == id); //שליפה מהמסד נתונים

@@ -2,6 +2,6 @@
 {
     public class Diraction
     {
-        public string diraction {  get; set; }
+        public string direction {  get; set; }
     }
 }
