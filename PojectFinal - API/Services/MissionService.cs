@@ -22,7 +22,7 @@ namespace PojectFinal___API.Services
         public static bool IsMission(Agent agent, Target target)
         {
             var distance = TimeDistanceService.Distance(agent.x, agent.y, target.x, target.y);
-            return distance < 200 && target.y>0 && target.x == 0;
+            return distance < 200 && target.y>0 && target.x >= 0;
         }
 
         //יוצר פקודה או הוראה לחיסול עבור סוכן במשימה

@@ -9,18 +9,18 @@ namespace PojectFinal___API.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class MissionController : ControllerBase
+    public class MissionsController : ControllerBase
     {
-        private readonly DbConnection _contection;        
-        public MissionController(DbConnection dbConnection)
+        private readonly DbConnection _contection;
+        public MissionsController(DbConnection dbConnection)
         {
             this._contection = dbConnection;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAMissions()
-        {            
-            var missions = await _contection.missions.ToArrayAsync();
+        {
+            var missions = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).ToArrayAsync();
             return StatusCode(
                 StatusCodes.Status200OK,
                 new
@@ -29,18 +29,34 @@ namespace PojectFinal___API.Controllers
                 }
             );
         }
-        
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateStatus(int id)
+        {
+            var mission = await _contection.missions.FirstOrDefaultAsync(x => x.Id == id);
+            mission.Status = StatusMission.statusMission.Actice.ToString();
+            var agents = mission.
+            //_contection.SaveChanges();
+            return StatusCode(200);
+        }
+
         [HttpPost("update")]
         public async Task<IActionResult> UpdateMissions()
         {
-            var list = await _contection.missions.ToArrayAsync();
+            var list = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).ToArrayAsync();
 
             foreach (var mission in list)
             {
+                if (mission.Status != StatusMission.statusMission.Actice.ToString())
+                {
+                    continue;
+                }
                 var agent = mission.Agent;
                 var target = mission.Target;
 
                 var comand = MissionService.CreateCommeandForAgent(agent, target);
+                
+                agent = MoveService.MoveAgent(comand, agent);
 
                 if (agent.x == target.x && agent.y == target.y)
                 {
@@ -49,13 +65,12 @@ namespace PojectFinal___API.Controllers
                     mission.TimLeft = "0";
                     mission.Duration += 0.2;
                     mission.Status = StatusMission.statusMission.Comlpeted.ToString();
-                    break;
                 }
 
-                agent = MoveService.MoveAgent(comand, agent);
                 mission.TimLeft = TimeDistanceService.UpdateTimeLeft(mission);
-                mission .Duration = TimeDistanceService.UpdateDuration(mission);
+                mission.Duration = TimeDistanceService.UpdateDuration(mission);
             }
+            _contection.SaveChanges();
 
             return StatusCode(
                 StatusCodes.Status200OK);

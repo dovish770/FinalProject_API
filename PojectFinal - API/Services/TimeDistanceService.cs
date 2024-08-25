@@ -1,4 +1,5 @@
-﻿using PojectFinal___API.Modles;
+﻿using PojectFinal___API.Enums;
+using PojectFinal___API.Modles;
 
 namespace PojectFinal___API.Services
 {
@@ -16,7 +17,7 @@ namespace PojectFinal___API.Services
         //חישוב ועידכון זמן שנותר 
         public static string UpdateTimeLeft(Mission mission)
         {
-            if (mission.Status.ToString() != "Actice")
+            if (mission.Status != StatusMission.statusMission.Actice.ToString())
             {
                 return "0";
             }
