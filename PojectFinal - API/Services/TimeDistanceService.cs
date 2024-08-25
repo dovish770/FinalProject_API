@@ -15,13 +15,8 @@ namespace PojectFinal___API.Services
         }
 
         //חישוב ועידכון זמן שנותר 
-        public static string UpdateTimeLeft(Mission mission)
-        {
-            if (mission.Status != StatusMission.statusMission.Actice.ToString())
-            {
-                return "0";
-            }
-
+        public static double UpdateTimeLeft(Mission mission)
+        {            
             var x1 = mission.Agent.x;
             var y1 = mission.Agent.y;
 
@@ -29,9 +24,9 @@ namespace PojectFinal___API.Services
             var y2 = mission.Target.y;
 
             var distance = Distance(x1, y1, x2, y2);
-             (distance/5).ToString();
+             
 
-            return (distance/5).ToString();
+            return distance/5;
         }
 
         //חישוב ועידכון משך המשימה

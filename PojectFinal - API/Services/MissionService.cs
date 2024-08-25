@@ -1,10 +1,14 @@
 ﻿using PojectFinal___API.Modles;
 using PojectFinal___API.Enums;
+using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 
 namespace PojectFinal___API.Services
 {
     public class MissionService
-    {       
+    {
+        private DbContextOptionsBuilder optionsBuilder = new DbContextOptionsBuilder<DbConnection>();
+
         public static Mission CreateMission(Agent agent, Target target)
         {
             Mission mission = new Mission();
@@ -66,6 +70,21 @@ namespace PojectFinal___API.Services
             }    
             
             return "";
-        }        
+        }       
+        
+        //מחזיר רשימה של משימות שהוצעו לאותו זוג סוכן-מטרה
+        public static Mission BestSugestion(Mission[] missions, Mission mission)
+        {
+            var finaleMission = mission;//זאת תהיה המשימה הכי יעילה
+
+            foreach (var mis in missions)
+            {
+                if (mis.TimLeft > finaleMission.TimLeft)
+                {
+                    finaleMission = mis;
+                }
+            }
+            return finaleMission;
+        }
     }
 }

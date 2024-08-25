@@ -14,7 +14,7 @@ namespace PojectFinal___API.Modles
       
         public double? Duration { get; set; }
         
-        public string TimLeft { get; set; }
+        public double TimLeft { get; set; }
 
         public string Status { get; set; }
 

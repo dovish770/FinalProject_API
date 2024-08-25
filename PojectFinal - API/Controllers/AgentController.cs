@@ -5,6 +5,7 @@ using PojectFinal___API.Services;
 using PojectFinal___API.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace PojectFinal___API.Controllers
 {
@@ -108,11 +109,20 @@ namespace PojectFinal___API.Controllers
 
                     if (MissionService.IsMission(agent, target) && await IsNotTargeted(target.Id))// וידוא שהמטרה קרובה מספיק ושהיא לא מצוותת למשימה פעילה אחרת
                     {
-                        Mission mission = MissionService.CreateMission(agent, target);//השמה של משימה
+                        var listMissions = await _contection.missions.Where(m => m.Agent.Id == agent.Id && m.Target.Id == target.Id).ToArrayAsync(); //מוציא משימות שמוצעות כבר לסוכן ולמטרה הזאת
+
+                        var tempmission = MissionService.CreateMission(agent, target);// השמה של משימה זמנית
+                        var mission = new Mission();//השמת המשימה שתחזור -היעילה מביניהם
+                        
+                        if (listMissions != null)
+                        {
+                            mission = MissionService.BestSugestion(listMissions, tempmission);//פונקציה מחזירה את ההצעה הטובה ביותר
+                        }
                         _contection.missions.Add(mission);//הוספה לטבלה
                     }
                 }
             }
+            await _contection.SaveChangesAsync();
         }
 
         //בדיקה האם המטרה משויכת למשימה פעילה

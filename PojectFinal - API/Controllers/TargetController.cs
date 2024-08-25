@@ -115,12 +115,20 @@ namespace PojectFinal___API.Controllers
                 {
                     if (MissionService.IsMission(agent, target)) //בדיקה אם הקירבה מספיקה כדי ליצור משימה
                     {
-                        Mission mission = MissionService.CreateMission(agent, target); //יצירת משימה                       
-                        _contection.missions.Add(mission); //הוספה למסד נתונים
-                        _contection.SaveChanges();
+                        var listMissions = await _contection.missions.Where(m => m.Agent.Id == agent.Id && m.Target.Id == target.Id).ToArrayAsync(); //מוציא משימות שמוצעות כבר לסוכן ולמטרה הזאת
+
+                        var tempmission = MissionService.CreateMission(agent, target);// השמה של משימה זמנית
+                        var mission = new Mission();//השמת המשימה שתחזור -היעילה מביניהם
+
+                        if (listMissions != null)
+                        {
+                            mission = MissionService.BestSugestion(listMissions, tempmission);//פונקציה מחזירה את ההצעה הטובה ביותר
+                            _contection.missions.Add(mission); //הוספה למסד נתונים                        
+                        }
                     }
                 }
             }
+            await _contection.SaveChangesAsync();
             return;
         }
 

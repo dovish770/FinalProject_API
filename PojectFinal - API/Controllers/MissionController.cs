@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PojectFinal___API.Modles;
 using PojectFinal___API.Services;
 using PojectFinal___API.Enums;
+using System.Reflection;
 
 namespace PojectFinal___API.Controllers
 {
@@ -34,9 +35,16 @@ namespace PojectFinal___API.Controllers
         public async Task<IActionResult> UpdateStatus(int id)
         {
             var mission = await _contection.missions.FirstOrDefaultAsync(x => x.Id == id);
-            mission.Status = StatusMission.statusMission.Actice.ToString();
-            var agents = mission.
-            //_contection.SaveChanges();
+            if (mission == null) return StatusCode(400);
+
+            mission.Status = StatusMission.statusMission.Actice.ToString();//מעדכן את המשימה לפעילה
+
+            var missions1 = await _contection.missions.Include(m => m.Agent == mission.Agent).ToArrayAsync();
+            var missions2 = await _contection.missions.Include(m => m.Target == mission.Target).ToArrayAsync();
+            _contection.missions.RemoveRange(missions1);//הסרה של המסימות שהוצעו לסוכן ולמטרה שכרגע צוותו
+            _contection.missions.RemoveRange(missions2);
+
+            _contection.SaveChanges();
             return StatusCode(200);
         }
 
@@ -62,7 +70,7 @@ namespace PojectFinal___API.Controllers
                 {
                     mission.Target.Status = StatusTarget.statusTarget.Eliminated.ToString();
                     mission.Agent.Status = StatusAgent.statusAgent.UnderCover.ToString();
-                    mission.TimLeft = "0";
+                    mission.TimLeft = 0;
                     mission.Duration += 0.2;
                     mission.Status = StatusMission.statusMission.Comlpeted.ToString();
                 }
