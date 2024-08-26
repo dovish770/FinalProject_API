@@ -16,8 +16,6 @@ namespace PojectFinal___API.Modles
         
         public double TimLeft { get; set; }
 
-        public string Status { get; set; }
-
-        public Mission() { }
+        public string Status { get; set; }        
     }
 }

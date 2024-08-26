@@ -19,10 +19,11 @@ namespace PojectFinal___API.Controllers
             this._contection = dbConnection;
         }
 
+        //כל המשימות
         [HttpGet]
         public async Task<IActionResult> GetAMissions()
         {
-            var missions = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).ToArrayAsync();
+            var missions = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).ToArrayAsync();//שליפה של כל המשימות
             return StatusCode(
                 200, missions);                            
         }
@@ -67,57 +68,68 @@ namespace PojectFinal___API.Controllers
             return StatusCode(200, new { availableAgents = availableAgents.Count() });
         }
      
+        //מתחיל משימה
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateStatus(int id)
         {
-            var mission = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).FirstOrDefaultAsync(x => x.Id == id);
-            if (mission == null) return StatusCode(400);
-            mission.TimLeft = TimeDistanceService.UpdateTimeLeft(mission);
-            if (!MissionService.IsMission(mission.Agent, mission.Target))
+            var mission = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).FirstOrDefaultAsync(x => x.Id == id);//שליפה של המשימה מהdb 
+            
+            mission.TimLeft = TimeDistanceService.UpdateTimeLeft(mission);//מעדכן את הזמן שנותר לחיסול
+
+            if (!MissionService.IsMission(mission.Agent, mission.Target)) //?האם המטרה עדיין מספיק קרובה לסוכן?
             {
-                _contection.missions.Remove(mission);
-                return StatusCode(400, new { messege = "cannot start mission that is fardest then 200 km!" });
+                _contection.missions.Remove(mission);//לא. מחיקה מהDB
+
+                return StatusCode(400);
             }
 
             mission.Status = StatusMission.statusMission.Actice.ToString();//מעדכן את המשימה לפעילה
            
-            mission.Agent.Status = StatusAgent.statusAgent.OnAMission.ToString();
+            mission.Agent.Status = StatusAgent.statusAgent.OnAMission.ToString();//active" מעדכן סטטוס של סוכן ל"
 
             var missions1 = await _contection.missions.Where(m => m.Agent == mission.Agent).ToArrayAsync();
             var missions2 = await _contection.missions.Where(m => m.Target == mission.Target).ToArrayAsync();
-            _contection.missions.RemoveRange(missions1);//הסרה של המסימות שהוצעו לסוכן ולמטרה שכרגע צוותו
-            _contection.missions.RemoveRange(missions2);
-            _contection.missions.Add(mission);
 
-            await _contection.SaveChangesAsync();
+            _contection.missions.RemoveRange(missions1);//הסרה של המשימות שהוצעו לסוכן ולמטרה שכרגע צוותו
+            for (int i = 0; i < missions1.Length; i++)
+            {
+                _contection.missions.Remove(missions2[i]);
+            }
+            
+            _contection.missions.Add(mission);//הוספה של המשימה למסד הנתונים לאחר שנמחקה בשורה הקודמת
+
+             await _contection.SaveChangesAsync();
             return StatusCode(200);
         }
 
+        //עידכון סטטוס של כל המשימות הפעילות - הזזה של הסוכנים שלהם
         [HttpPost("update")]
         public async Task<IActionResult> UpdateMissions()
         {
-            var list = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).ToArrayAsync();
+            var list = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).ToArrayAsync();//שליפה של כל המשימות
 
             foreach (var mission in list)
             {
-                if (mission.Status != StatusMission.statusMission.Actice.ToString())
+                if (mission.Status != StatusMission.statusMission.Actice.ToString())//מסנן את המשימות הלא פעילות
                 {
                     continue;
                 }
+
                 var agent = mission.Agent;
                 var target = mission.Target;
 
-                var comand = MissionService.CreateCommeandForAgent(agent, target);
+                var comand = MissionService.CreateCommeandForAgent(agent, target);//יצירת פקודה לתזוזה של הסוכן
                 
-                agent = MoveService.MoveAgent(comand, agent);
+                agent = MoveService.MoveAgent(comand, agent);//הזזה בפועל של הסוכן
 
-                if (agent.x == target.x && agent.y == target.y)
+                if (agent.x == target.x && agent.y == target.y)//ביצוע חיסול אם הסוכן השיג את המטרה והם כעת על אותה משבצת
                 {
                     mission.Target.Status = StatusTarget.statusTarget.Eliminated.ToString();
                     mission.Agent.Status = StatusAgent.statusAgent.UnderCover.ToString();
                     mission.TimLeft = 0;
                     mission.Duration += 0.2;
-                    mission.Status = StatusMission.statusMission.Comlpeted.ToString();
+                    mission.Status = StatusMission.statusMission.Comlpeted.ToString();                    
+                    continue;
                 }
 
                 mission.TimLeft = TimeDistanceService.UpdateTimeLeft(mission);
@@ -125,8 +137,7 @@ namespace PojectFinal___API.Controllers
             }
             _contection.SaveChanges();
 
-            return StatusCode(
-                StatusCodes.Status200OK);
+            return StatusCode(200);
         }
 
 

@@ -55,7 +55,11 @@ namespace PojectFinal___API.Controllers
         }
 
         //מגדיר מיקום של סוכן חדש
-        [HttpPut("{id}/pin")]
+        [HttpPut("{i" +
+            "" +
+            "" +
+            "" +
+            "d}/pin")]
         public async Task<IActionResult> SetLocation(int id, [FromBody] Location location)
         {
             Agent agent = await _contection.agents.FirstOrDefaultAsync(x => x.Id == id); //מציאת הסוכן לפי id
