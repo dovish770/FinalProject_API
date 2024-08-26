@@ -30,7 +30,7 @@ namespace PojectFinal___API.Controllers
             return StatusCode(200, list);                
         }
 
-        [HttpGet("summery")]
+        [HttpGet("summery")] 
         public async Task<IActionResult> GetAgentsSummery()
         {
             var list = await _contection.agents.ToArrayAsync();
@@ -40,7 +40,7 @@ namespace PojectFinal___API.Controllers
 
             return StatusCode(200, new {UnderCover = undetCover, OnAmission = onAmission});
         }
-
+        
         //יצירת מטרה
         [HttpPost]
         public async Task<IActionResult> CreateAgent(Agent agent)

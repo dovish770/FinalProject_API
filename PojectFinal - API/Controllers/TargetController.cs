@@ -26,12 +26,7 @@ namespace PojectFinal___API.Controllers
             var list = await _contection.targets.ToArrayAsync(); //שליפה של טבלת מטרות והמרה למערך
 
             return StatusCode(
-                StatusCodes.Status200OK,
-                new
-                {
-                    success = true,
-                    targets = list
-                });
+                200, list);
         }
 
         [HttpGet("summery")]
