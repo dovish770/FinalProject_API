@@ -26,14 +26,19 @@ namespace PojectFinal___API.Controllers
         {
             
             var list = await _contection.agents.ToArrayAsync();  //שולף טבלה של סוכנים וממיר לרשימה
+            Console.WriteLine(list);
+            return StatusCode(200, list);                
+        }
 
-            return StatusCode(
-                StatusCodes.Status200OK,
-                new
-                {
-                    success = true,
-                    agents = list
-                });
+        [HttpGet("summery")]
+        public async Task<IActionResult> GetAgentsSummery()
+        {
+            var list = await _contection.agents.ToArrayAsync();
+            var undetCover = list.Count(ag => ag.Status == StatusAgent.statusAgent.UnderCover.ToString());//רשימה שתכיל כל הסוכנים הרדומים
+
+            var onAmission = list.Count(ag => ag.Status == StatusAgent.statusAgent.OnAMission.ToString());//רשימה שתכיל כל הסוכנים הפעילים
+
+            return StatusCode(200, new {UnderCover = undetCover, OnAmission = onAmission});
         }
 
         //יצירת מטרה

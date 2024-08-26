@@ -34,6 +34,17 @@ namespace PojectFinal___API.Controllers
                 });
         }
 
+        [HttpGet("summery")]
+        public async Task<IActionResult> GetTargetsSummery()
+        {
+            var list = await _contection.targets.ToArrayAsync();
+            var alive = list.Count(ag => ag.Status == StatusTarget.statusTarget.Alive.ToString());//רשימה שתכיל כל המטרות החיות
+
+            var eliminated = list.Count(ag => ag.Status == StatusTarget.statusTarget.Eliminated.ToString());//רשימה שתכיל כל המטרות המחוסלות
+
+            return StatusCode(200, new { Alive = alive, Eliminated = eliminated });
+        }
+
         //יצירת מטרה
         [HttpPost]
         public async Task<IActionResult> CreateTarget(Target target)
