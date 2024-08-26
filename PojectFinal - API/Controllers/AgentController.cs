@@ -22,13 +22,12 @@ namespace PojectFinal___API.Controllers
 
         //--רשימת סוכנים--
         [HttpGet]
-        public async Task<IActionResult> GetAgent()
-        {
-            
+        public async Task<IActionResult> GetAgents()
+        {           
             var list = await _contection.agents.ToArrayAsync();  //שולף טבלה של סוכנים וממיר לרשימה
             Console.WriteLine(list);
             return StatusCode(200, list);                
-        }
+        }        
 
         [HttpGet("summery")] 
         public async Task<IActionResult> GetAgentsSummery()
@@ -50,10 +49,9 @@ namespace PojectFinal___API.Controllers
             _contection.agents.Add(agent); //מסויף לDB
 
             await _contection.SaveChangesAsync();
-            agent = await _contection.agents.FirstOrDefaultAsync(ag => ag.Id == agent.Id);
-            return StatusCode(
-                StatusCodes.Status201Created,
-                new { success = true, id = agent.Id });
+            agent = await _contection.agents.FirstOrDefaultAsync(ag => ag.Id == agent.Id);//מושך את הסוכן כדי שיהיה לו id
+
+            return StatusCode(201, new { success = true, id = agent.Id });
         }
 
         //מגדיר מיקום של סוכן חדש
@@ -117,22 +115,20 @@ namespace PojectFinal___API.Controllers
 
             foreach (Target target in list)
             {
-                if (target.Status == StatusTarget.statusTarget.Alive.ToString())//וידוא שהסטטוס מתאים
-                {
+                if (target.Status == StatusTarget.statusTarget.Alive.ToString() && MissionService.IsMission(agent, target) && await IsNotTargeted(target.Id))//וידוא שהסטטוס מתאים ושהמטרה קרובה מספיק ושהיא לא מצוותת למשימה פעילה אחרת
+                {                   
+                    var listMissions = await _contection.missions.Where(m => m.Agent.Id == agent.Id && m.Target.Id == target.Id).ToArrayAsync(); //מוציא משימות שמוצעות כבר לסוכן ולמטרה הזאת
 
-                    if (MissionService.IsMission(agent, target) && await IsNotTargeted(target.Id))// וידוא שהמטרה קרובה מספיק ושהיא לא מצוותת למשימה פעילה אחרת
-                    {
-                        var listMissions = await _contection.missions.Where(m => m.Agent.Id == agent.Id && m.Target.Id == target.Id).ToArrayAsync(); //מוציא משימות שמוצעות כבר לסוכן ולמטרה הזאת
-
-                        var tempmission = MissionService.CreateMission(agent, target);// השמה של משימה זמנית
-                        var mission = new Mission();//השמת המשימה שתחזור -היעילה מביניהם
+                    var tempmission = MissionService.CreateMission(agent, target);// השמה של משימה זמנית
                         
-                        if (listMissions != null)
-                        {
-                            mission = MissionService.BestSugestion(listMissions, tempmission);//פונקציה מחזירה את ההצעה הטובה ביותר
-                        }
-                        _contection.missions.Add(mission);//הוספה לטבלה
+                    var mission = new Mission();//השמת המשימה שתחזור -היעילה מביניהם
+                        
+                    if (listMissions != null)
+                    {
+                        mission = MissionService.BestSugestion(listMissions, tempmission);//פונקציה מחזירה את ההצעה הטובה ביותר
                     }
+                    _contection.missions.Add(mission);//הוספה לטבלה
+                    
                 }
             }
             await _contection.SaveChangesAsync();
@@ -141,12 +137,15 @@ namespace PojectFinal___API.Controllers
         //בדיקה האם המטרה המוצעת למשימה פעילה
         private async Task<bool> IsNotTargeted(int id)
         {
-            Mission mission = await _contection.missions.FirstOrDefaultAsync(x => x.Target.Id == id); //שליפה מהמסד נתונים
-            if (mission == null || mission.Status == StatusMission.statusMission.Suggestion.ToString())
+            List<Mission> missions = await _contection.missions.Where(x => x.Target.Id == id).ToListAsync(); //שליפה מהמסד נתונים רשימה של משימות על המטרה
+            foreach (var mission in missions)
             {
-                return true;
-            }
-            return false;    
+                if (mission.Status == StatusMission.statusMission.Actice.ToString())//כל משימה נבדקת ואם היא פעילה יוחזר false
+                {
+                    return false;
+                }
+            }               
+            return true;
         }
     }
 }

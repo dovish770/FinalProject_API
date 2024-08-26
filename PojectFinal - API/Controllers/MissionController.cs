@@ -66,26 +66,28 @@ namespace PojectFinal___API.Controllers
             }
             return StatusCode(200, new { availableAgents = availableAgents.Count() });
         }
-
-
-        //to do!!!!!!! check and delete invalide missions!!!!!
-
-
-
+     
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateStatus(int id)
         {
-            var mission = await _contection.missions.FirstOrDefaultAsync(x => x.Id == id);
+            var mission = await _contection.missions.Include(m => m.Agent).Include(m => m.Target).FirstOrDefaultAsync(x => x.Id == id);
             if (mission == null) return StatusCode(400);
+            mission.TimLeft = TimeDistanceService.UpdateTimeLeft(mission);
+            if (!MissionService.IsMission(mission.Agent, mission.Target))
+            {
+                _contection.missions.Remove(mission);
+                return StatusCode(400, new { messege = "cannot start mission that is fardest then 200 km!" });
+            }
 
             mission.Status = StatusMission.statusMission.Actice.ToString();//מעדכן את המשימה לפעילה
-
+           
             mission.Agent.Status = StatusAgent.statusAgent.OnAMission.ToString();
 
-            var missions1 = await _contection.missions.Include(m => m.Agent == mission.Agent).ToArrayAsync();
-            var missions2 = await _contection.missions.Include(m => m.Target == mission.Target).ToArrayAsync();
+            var missions1 = await _contection.missions.Where(m => m.Agent == mission.Agent).ToArrayAsync();
+            var missions2 = await _contection.missions.Where(m => m.Target == mission.Target).ToArrayAsync();
             _contection.missions.RemoveRange(missions1);//הסרה של המסימות שהוצעו לסוכן ולמטרה שכרגע צוותו
             _contection.missions.RemoveRange(missions2);
+            _contection.missions.Add(mission);
 
             await _contection.SaveChangesAsync();
             return StatusCode(200);
