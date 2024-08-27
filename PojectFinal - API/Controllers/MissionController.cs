@@ -79,6 +79,7 @@ namespace PojectFinal___API.Controllers
             if (!MissionService.IsMission(mission.Agent, mission.Target)) //?האם המטרה עדיין מספיק קרובה לסוכן?
             {
                 _contection.missions.Remove(mission);//לא. מחיקה מהDB
+                await _contection.SaveChangesAsync();
 
                 return StatusCode(400);
             }
@@ -87,19 +88,16 @@ namespace PojectFinal___API.Controllers
            
             mission.Agent.Status = StatusAgent.statusAgent.OnAMission.ToString();//active" מעדכן סטטוס של סוכן ל"
 
-            var missions1 = await _contection.missions.Where(m => m.Agent == mission.Agent).ToArrayAsync();
-            var missions2 = await _contection.missions.Where(m => m.Target == mission.Target).ToArrayAsync();
+            await _contection.SaveChangesAsync();
 
-            _contection.missions.RemoveRange(missions1);//הסרה של המשימות שהוצעו לסוכן ולמטרה שכרגע צוותו
-            for (int i = 0; i < missions1.Length; i++)
-            {
-                _contection.missions.Remove(missions2[i]);
-            }
+            var missions1 = await _contection.missions.Where(m => m.Agent == mission.Agent && m.Id != mission.Id || m.Target == mission.Target && m.Id != mission.Id).ToListAsync();            
+
+            _contection.missions.RemoveRange(missions1);//הסרה של המשימות שהוצעו לסוכן ולמטרה שכרגע צוותו                                  
+            await _contection.SaveChangesAsync();
             
-            _contection.missions.Add(mission);//הוספה של המשימה למסד הנתונים לאחר שנמחקה בשורה הקודמת
+            await _contection.SaveChangesAsync();
 
-             await _contection.SaveChangesAsync();
-            return StatusCode(200);
+            return RedirectToAction("GetAMissions");
         }
 
         //עידכון סטטוס של כל המשימות הפעילות - הזזה של הסוכנים שלהם
